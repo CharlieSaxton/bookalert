@@ -46,17 +46,31 @@ def _recipients(search: dict) -> list[str]:
 
 
 def _announce(subject: str, html: str, markdown: str, search: dict) -> bool:
-    channels = [("Email", lambda: send_email(subject, html, _recipients(search)))]
-    if os.environ.get("GITHUB_TOKEN") and os.environ.get("GITHUB_REPOSITORY"):
-        channels.append(("GitHub issue", lambda: create_github_issue(subject, markdown)))
-    delivered = False
-    for name, send in channels:
+    # One address per request: a provider that rejects a single recipient (Resend's
+    # free tier refuses anyone but the account owner) would otherwise fail the whole
+    # message and nobody would be told, including the address that was fine.
+    recipients = _recipients(search)
+    delivered = []
+    for address in recipients:
         try:
-            send()
-            delivered = True
+            send_email(subject, html, address)
+            delivered.append(address)
         except Exception as error:
-            print(f"  {name} channel failed: {error}")
-    return delivered
+            print(f"  email to {address} failed: {error}")
+
+    if os.environ.get("GITHUB_TOKEN") and os.environ.get("GITHUB_REPOSITORY"):
+        try:
+            create_github_issue(subject, markdown)
+        except Exception as error:
+            print(f"  GitHub issue channel failed: {error}")
+
+    if delivered:
+        undelivered = [a for a in recipients if a not in delivered]
+        if undelivered:
+            print(f"  delivered to {len(delivered)}/{len(recipients)}; still failing: {', '.join(undelivered)}")
+    # Email is the product. A GitHub issue is a convenience copy, so it must never
+    # be enough on its own to mark a finding notified and retire the retry.
+    return bool(delivered)
 
 
 def _safe_finish(run_id, status: str, scraped: int, new: int, error=None, returned: int = 0) -> None:

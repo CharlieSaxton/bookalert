@@ -42,11 +42,12 @@ def _post_json(url: str, headers: dict, payload: dict, label: str) -> None:
         raise RuntimeError(f"{label} request failed: {error.reason}") from error
 
 
-def send_email(subject: str, html: str, to_email: str, from_email: str = FROM_EMAIL) -> None:
+def send_email(subject: str, html: str, to_email, from_email: str = FROM_EMAIL) -> None:
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
-    recipient = (to_email or "").strip()
-    if not api_key or not recipient:
-        print(f"[DRY RUN] would send to {recipient or '<no recipient>'}: {subject}")
+    raw = [to_email] if isinstance(to_email, str) else list(to_email or [])
+    recipients = [address.strip() for address in raw if address and address.strip()]
+    if not api_key or not recipients:
+        print(f"[DRY RUN] would send to {', '.join(recipients) or '<no recipient>'}: {subject}")
         print(html)
         return
     _post_json(
@@ -54,7 +55,7 @@ def send_email(subject: str, html: str, to_email: str, from_email: str = FROM_EM
         {"Authorization": f"Bearer {api_key}"},
         {
             "from": from_email or FROM_EMAIL,
-            "to": [recipient],
+            "to": recipients,
             "subject": subject,
             "html": html,
         },
@@ -110,14 +111,22 @@ def _search_url(search: dict) -> str:
     return search.get("search_url") or "https://www.booking.com/"
 
 
+BADGE = (
+    "display:inline-block;font-size:11px;font-weight:700;letter-spacing:0.04em;"
+    "text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-left:8px;"
+    "background:#e8f3ff;color:#0058a3;vertical-align:middle;"
+)
+
+
 def _property_block(prop: dict, search_url: str) -> str:
     name = escape(prop.get("name") or "Unnamed property")
     url = escape(prop.get("url") or search_url)
     parts = _meta_parts(prop)
     meta = f'<p style="{META}">{escape(" · ".join(parts))}</p>' if parts else ""
+    badge = f'<span style="{BADGE}">room opened up</span>' if prop.get("returned") else ""
     return (
         f'<div style="{CARD}">'
-        f'<a href="{url}" style="{NAME_LINK}">{name}</a>'
+        f'<a href="{url}" style="{NAME_LINK}">{name}</a>{badge}'
         f"{meta}</div>"
     )
 

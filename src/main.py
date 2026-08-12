@@ -32,8 +32,21 @@ def _ordered(props: list[dict]) -> list[dict]:
     )
 
 
+def _recipients(search: dict) -> list[str]:
+    emails = search.get("alert_emails") or []
+    if not emails and search.get("alert_email"):
+        emails = [search["alert_email"]]
+    seen, unique = set(), []
+    for email in emails:
+        cleaned = (email or "").strip().lower()
+        if cleaned and cleaned not in seen:
+            seen.add(cleaned)
+            unique.append(cleaned)
+    return unique
+
+
 def _announce(subject: str, html: str, markdown: str, search: dict) -> bool:
-    channels = [("Email", lambda: send_email(subject, html, search.get("alert_email")))]
+    channels = [("Email", lambda: send_email(subject, html, _recipients(search)))]
     if os.environ.get("GITHUB_TOKEN") and os.environ.get("GITHUB_REPOSITORY"):
         channels.append(("GitHub issue", lambda: create_github_issue(subject, markdown)))
     delivered = False
@@ -46,19 +59,29 @@ def _announce(subject: str, html: str, markdown: str, search: dict) -> bool:
     return delivered
 
 
-def _safe_finish(run_id, status: str, scraped: int, new: int, error=None) -> None:
+def _safe_finish(run_id, status: str, scraped: int, new: int, error=None, returned: int = 0) -> None:
     try:
-        store.finish_run(run_id, status, scraped, new, error)
+        store.finish_run(run_id, status, scraped, new, error, returned_count=returned)
     except Exception as finish_error:
         print(f"  could not record run {run_id}: {finish_error}")
 
 
+def _headline(pending: list[dict], first_run: bool) -> str:
+    count = len(pending)
+    if first_run:
+        return f"{count} {_plural(count)} matching"
+    back = sum(1 for row in pending if row.get("returned"))
+    fresh = count - back
+    if back and fresh:
+        return f"{fresh} new, {back} back in stock"
+    if back:
+        return f"{back} room{'' if back == 1 else 's'} opened up"
+    return f"{fresh} new {_plural(fresh)}"
+
+
 def _notify(pending: list[dict], search: dict, first_run: bool) -> bool:
     label = search.get("label") or "Booking.com search"
-    count = len(pending)
-    headline = (
-        f"{count} {_plural(count)} matching" if first_run else f"{count} new {_plural(count)}"
-    )
+    headline = _headline(pending, first_run)
     delivered = _announce(
         f"🏨 {headline}: {label}",
         build_alert_html(pending, search, first_run),
@@ -84,18 +107,33 @@ def _run_search(search: dict) -> tuple[bool, int, int]:
         search_url = search.get("search_url")
         if not search_url:
             raise RuntimeError("search row has no search_url")
-        first_run = not store.known_property_ids(search_id)
+        known = store.known_property_ids(search_id)
+        first_run = not known
         scraped = _filtered(fetch_properties(search_url, search.get("max_pages") or 2), search)
+        seen_ids = {prop["id"] for prop in scraped if prop.get("id")}
+
+        # A property absent from results has no availability for these dates; when it
+        # reappears a room has opened up, which is worth alerting even though the
+        # property itself is not new.
+        returned_ids = store.unavailable_property_ids(search_id) & seen_ids
         new_rows = store.insert_findings(search_id, run_id, scraped)
+        store.mark_availability(search_id, seen_ids, known - seen_ids)
+        returned_rows = store.requeue_returned(
+            search_id, returned_ids, run_id, {p["id"]: p for p in scraped}
+        )
+
         pending = _ordered(store.unnotified_findings(search_id))
+        for row in pending:
+            row["returned"] = row.get("property_id") in returned_ids
         alerted = _notify(pending, search, first_run) if pending else False
-        _safe_finish(run_id, "ok", len(scraped), len(new_rows))
+        _safe_finish(run_id, "ok", len(scraped), len(new_rows), returned=len(returned_rows))
         if not pending:
             outcome = "nothing to alert"
         else:
             outcome = f"{len(pending)} alerted" if alerted else f"{len(pending)} still pending"
+        returned_note = f", {len(returned_rows)} back in stock" if returned_rows else ""
         print(
-            f"[{label}] {len(scraped)} scraped, {len(new_rows)} new, "
+            f"[{label}] {len(scraped)} scraped, {len(new_rows)} new{returned_note}, "
             f"{outcome}{' (first run)' if first_run else ''}."
         )
         return True, len(scraped), len(new_rows)

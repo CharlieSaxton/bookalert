@@ -4,6 +4,7 @@ import { createClient, getSessionUser } from '@/lib/supabase/server';
 import { formatAbsolute, formatCount, formatRating } from '@/lib/format';
 import type { Finding, Run, Search } from '@/lib/types';
 import { SearchActions } from '@/app/_components/search-actions';
+import { RecipientsEditor } from '@/app/_components/recipients-editor';
 import { ActiveBadge, RunBadge, TimeAgo } from '@/app/_components/bits';
 import { Topbar } from '@/app/_components/topbar';
 
@@ -50,6 +51,7 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
   const findings = (findingsResult.data ?? []) as Finding[];
   const runs = (runsResult.data ?? []) as Run[];
   const total = findingsCount.count ?? findings.length;
+  const recipients = search.alert_emails ?? [];
 
   return (
     <div className="shell">
@@ -73,7 +75,8 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
             <ActiveBadge active={search.active} />
           </div>
           <p className="page-lede">
-            Added {formatAbsolute(search.created_at)}. Alerts go to {search.alert_email}.
+            Added {formatAbsolute(search.created_at)}. Alerts go to {formatCount(recipients.length)}{' '}
+            {recipients.length === 1 ? 'recipient' : 'recipients'}.
           </p>
         </div>
 
@@ -89,12 +92,20 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
                 {search.max_pages} {search.max_pages === 1 ? 'page' : 'pages'} per run
               </dd>
 
-              <dt>Alert email</dt>
-              <dd>{search.alert_email}</dd>
-
               <dt>State</dt>
               <dd>{search.active ? 'Active — re-checked on schedule' : 'Paused — not re-checked'}</dd>
             </dl>
+
+            <hr className="divider" />
+
+            <div className="stack" style={{ gap: 'var(--s2)' }}>
+              <span className="section-label">Alert recipients</span>
+              <p className="field-hint">
+                Everyone listed gets the same email when this search turns up a property it has
+                never seen. Changes save as you make them.
+              </p>
+              <RecipientsEditor searchId={search.id} emails={recipients} />
+            </div>
 
             <hr className="divider" />
 

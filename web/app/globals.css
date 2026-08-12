@@ -531,6 +531,94 @@ select {
   border-color: var(--accent-border);
 }
 
+/* ===== recipients ========================================================= */
+/* A chip is a badge holding an email address, so it wraps instead of running
+   off the card and can carry a remove control. */
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  min-width: 0;
+}
+
+.chip {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  gap: var(--s1);
+}
+
+.chip-x {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 0.9375rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.chip-x:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.chip-x:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* The last recipient cannot be removed. The control still takes the click so it
+   can say why, rather than going dead with no explanation. */
+.chip-x[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.chip-x[aria-disabled='true']:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text-faint);
+}
+
+/* Address field and its Add button on one line; the field takes the slack. */
+.recipient-add {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+
+.recipient-add .input {
+  flex: 1 1 14rem;
+  width: auto;
+}
+
+/* Roll-up used once a list outgrows a card's line. */
+.recipients > summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.recipients > summary:hover {
+  color: var(--accent);
+}
+
+.recipients[open] > summary {
+  margin-bottom: var(--s2);
+}
+
 /* ===== buttons ============================================================ */
 
 .btn {

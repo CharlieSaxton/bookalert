@@ -4,9 +4,17 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient, getSessionUser } from '@/lib/supabase/server';
 import type { CreateSearchState, MutationState } from '@/lib/form-state';
+import {
+  LAST_RECIPIENT_ERROR,
+  containsEmail,
+  isValidEmail,
+  normaliseEmail,
+} from '@/lib/recipients';
 
 const BOOKING_PREFIX = 'https://www.booking.com/';
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** A row the update did not match: deleted, or owned by another account. */
+const NO_SUCH_SEARCH = 'That search is no longer available on this account. Reload the page.';
 
 export async function createSearch(
   _previous: CreateSearchState,
@@ -15,7 +23,6 @@ export async function createSearch(
   const values = {
     label: text(formData, 'label'),
     search_url: text(formData, 'search_url'),
-    alert_email: text(formData, 'alert_email'),
     min_rating: text(formData, 'min_rating'),
     max_pages: text(formData, 'max_pages'),
   };
@@ -39,8 +46,26 @@ export async function createSearch(
     return { status: 'error', error: 'That URL is too long to store.', values };
   }
 
-  if (!EMAIL_RE.test(values.alert_email)) {
-    return { status: 'error', error: 'Enter a valid email address for the alerts.', values };
+  const recipients: string[] = [];
+  for (const raw of formData.getAll('alert_emails')) {
+    if (typeof raw !== 'string') continue;
+    const address = normaliseEmail(raw);
+    if (address === '') continue;
+    if (!isValidEmail(address)) {
+      return { status: 'error', error: `"${raw.trim()}" is not a valid email address.`, values };
+    }
+    if (containsEmail(recipients, address)) {
+      return { status: 'error', error: `${address} is listed twice. Remove the duplicate.`, values };
+    }
+    recipients.push(address);
+  }
+
+  if (recipients.length === 0) {
+    return {
+      status: 'error',
+      error: 'Add at least one email address to alert, otherwise this search would tell nobody.',
+      values,
+    };
   }
 
   let minRating: number | null = null;
@@ -63,7 +88,7 @@ export async function createSearch(
     user_id: user.id,
     label,
     search_url: values.search_url,
-    alert_email: values.alert_email,
+    alert_emails: recipients,
     min_rating: minRating,
     max_pages: maxPages,
     active: true,
@@ -111,11 +136,96 @@ export async function deleteSearch(
   return {};
 }
 
+export async function addRecipient(searchId: string, email: string): Promise<MutationState> {
+  if (!searchId) return { error: 'Missing search id.' };
+
+  const address = normaliseEmail(email);
+  if (!isValidEmail(address)) return { error: `"${email.trim()}" is not a valid email address.` };
+
+  const supabase = await createClient();
+  const current = await readRecipients(supabase, searchId);
+  if ('error' in current) return current;
+
+  if (containsEmail(current.emails, address)) {
+    return { error: `${address} already gets these alerts.` };
+  }
+
+  return writeRecipients(supabase, searchId, [...current.emails, address]);
+}
+
+export async function removeRecipient(searchId: string, email: string): Promise<MutationState> {
+  if (!searchId) return { error: 'Missing search id.' };
+
+  const address = normaliseEmail(email);
+  if (!isValidEmail(address)) return { error: `"${email.trim()}" is not a valid email address.` };
+
+  const supabase = await createClient();
+  const current = await readRecipients(supabase, searchId);
+  if ('error' in current) return current;
+
+  if (!containsEmail(current.emails, address)) {
+    return { error: `${address} is not on this search's recipient list.` };
+  }
+  if (current.emails.length <= 1) return { error: LAST_RECIPIENT_ERROR };
+
+  const remaining = current.emails.filter((entry) => normaliseEmail(entry) !== address);
+  return writeRecipients(supabase, searchId, remaining);
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath('/');
   redirect('/login');
+}
+
+type Db = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * The list as it stands right now. Postgres has no "append to array" through
+ * PostgREST, so both recipient actions read then write; two edits to the same
+ * search in the same instant can lose one. Acceptable — a search belongs to a
+ * single account and these edits are hand-driven.
+ */
+async function readRecipients(
+  supabase: Db,
+  searchId: string,
+): Promise<{ emails: string[] } | { error: string }> {
+  const { data, error } = await supabase
+    .from('searches')
+    .select('alert_emails')
+    .eq('id', searchId)
+    .maybeSingle();
+
+  if (error) return { error: describeDbError(error.message) };
+  if (!data) return { error: NO_SUCH_SEARCH };
+
+  const raw: unknown = data.alert_emails;
+  const emails = Array.isArray(raw)
+    ? raw.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '')
+    : [];
+  return { emails };
+}
+
+async function writeRecipients(
+  supabase: Db,
+  searchId: string,
+  emails: string[],
+): Promise<MutationState> {
+  // RLS scopes the update to rows this account owns, so someone else's search
+  // simply matches nothing — hence the empty check rather than a permission one.
+  const { data, error } = await supabase
+    .from('searches')
+    .update({ alert_emails: emails })
+    .eq('id', searchId)
+    .select('id');
+
+  if (error) return { error: describeDbError(error.message) };
+  if (!data || data.length === 0) return { error: NO_SUCH_SEARCH };
+
+  revalidatePath('/');
+  revalidatePath(`/searches/${searchId}`);
+  return {};
 }
 
 function text(formData: FormData, key: string): string {

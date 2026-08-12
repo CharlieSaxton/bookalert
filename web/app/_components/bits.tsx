@@ -76,6 +76,40 @@ export function RunBadge({ status, startedAt, finishedAt }: RunBadgeProps) {
   );
 }
 
+/**
+ * Recipients, read-only. Short lists sit inline; anything longer collapses
+ * behind a count so one search with a big distribution list cannot swamp its
+ * card. Editing lives on the search's own page.
+ */
+export function RecipientList({ emails }: { emails: string[] | null | undefined }) {
+  const list = emails ?? [];
+
+  if (list.length === 0) {
+    return <span className="field-hint">Nobody — this search alerts no one.</span>;
+  }
+
+  if (list.length <= 2) return <RecipientChips emails={list} />;
+
+  return (
+    <details className="recipients">
+      <summary>{list.length} recipients</summary>
+      <RecipientChips emails={list} />
+    </details>
+  );
+}
+
+function RecipientChips({ emails }: { emails: string[] }) {
+  return (
+    <ul className="chips">
+      {emails.map((email) => (
+        <li key={email} className="badge chip">
+          {email}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function isStale(startedAt: string | null | undefined, finishedAt: string | null | undefined) {
   if (finishedAt || !startedAt) return false;
   const started = new Date(startedAt).getTime();

@@ -83,6 +83,55 @@ def unnotified_findings(search_id) -> list[dict]:
     )
 
 
+def unavailable_property_ids(search_id) -> set[str]:
+    rows = _request(
+        "GET",
+        f"/findings?{_query(search_id=f'eq.{search_id}', available='is.false', select='property_id')}",
+    )
+    return {row["property_id"] for row in rows if row.get("property_id")}
+
+
+def mark_availability(search_id, present_ids, absent_ids) -> None:
+    if present_ids:
+        joined = ",".join(f'"{value}"' for value in present_ids)
+        _request(
+            "PATCH",
+            f"/findings?{_query(search_id=f'eq.{search_id}', property_id=f'in.({joined})')}",
+            {"available": True, "last_seen": _now_iso()},
+        )
+    if absent_ids:
+        joined = ",".join(f'"{value}"' for value in absent_ids)
+        _request(
+            "PATCH",
+            f"/findings?{_query(search_id=f'eq.{search_id}', property_id=f'in.({joined})')}",
+            {"available": False},
+        )
+
+
+def requeue_returned(search_id, property_ids, run_id, props_by_id) -> list[dict]:
+    requeued = []
+    for property_id in property_ids:
+        prop = props_by_id.get(property_id) or {}
+        rows = _request(
+            "PATCH",
+            f"/findings?{_query(search_id=f'eq.{search_id}', property_id=f'eq.{property_id}')}",
+            {
+                "notified": False,
+                "run_id": run_id,
+                "price": prop.get("price"),
+                "rating": prop.get("rating"),
+                "available": True,
+                "last_seen": _now_iso(),
+            },
+            prefer="return=representation",
+        )
+        if isinstance(rows, list) and rows:
+            row = dict(rows[0])
+            row["returned"] = True
+            requeued.append(row)
+    return requeued
+
+
 def start_run(search_id) -> str:
     rows = _request(
         "POST",
@@ -95,7 +144,9 @@ def start_run(search_id) -> str:
     return rows[0]["id"]
 
 
-def finish_run(run_id, status: str, scraped_count: int, new_count: int, error=None) -> None:
+def finish_run(
+    run_id, status: str, scraped_count: int, new_count: int, error=None, returned_count: int = 0
+) -> None:
     _request(
         "PATCH",
         f"/runs?{_query(id=f'eq.{run_id}')}",
@@ -104,6 +155,7 @@ def finish_run(run_id, status: str, scraped_count: int, new_count: int, error=No
             "finished_at": _now_iso(),
             "scraped_count": scraped_count,
             "new_count": new_count,
+            "returned_count": returned_count,
             "error": str(error)[:ERROR_LIMIT] if error else None,
         },
     )

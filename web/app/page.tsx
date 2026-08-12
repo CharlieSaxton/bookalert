@@ -5,7 +5,7 @@ import { formatCount, formatRating } from '@/lib/format';
 import type { Run, Search } from '@/lib/types';
 import { AddSearchForm } from '@/app/_components/add-search-form';
 import { SearchActions } from '@/app/_components/search-actions';
-import { ActiveBadge, RunBadge, TimeAgo } from '@/app/_components/bits';
+import { ActiveBadge, RecipientList, RunBadge, TimeAgo } from '@/app/_components/bits';
 import { Topbar } from '@/app/_components/topbar';
 
 type Summary = {
@@ -168,7 +168,9 @@ function SearchCard({ summary }: { summary: Summary }) {
         <dd>{search.max_pages}</dd>
 
         <dt>Alerts to</dt>
-        <dd>{search.alert_email}</dd>
+        <dd>
+          <RecipientList emails={search.alert_emails} />
+        </dd>
       </dl>
 
       {lastRun?.status === 'error' && lastRun.error ? (

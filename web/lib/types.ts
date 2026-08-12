@@ -3,7 +3,8 @@ export type Search = {
   user_id: string;
   label: string;
   search_url: string;
-  alert_email: string;
+  /** Every address alerted for this search. Always holds at least one entry. */
+  alert_emails: string[];
   min_rating: number | null;
   max_pages: number;
   active: boolean;

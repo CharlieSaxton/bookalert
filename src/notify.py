@@ -23,7 +23,11 @@ def _post_json(url: str, headers: dict, payload: dict, label: str) -> None:
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", **headers},
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "bookalert/1.0 (+https://github.com/CharlieSaxton/bookalert)",
+            **headers,
+        },
         method="POST",
     )
     try:

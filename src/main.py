@@ -1,138 +1,130 @@
-import json
+import os
 import sys
-from datetime import datetime, timezone
-from pathlib import Path
 
-from src.notify import (
-    build_alert_html,
-    build_alert_markdown,
-    build_startup_html,
-    build_startup_markdown,
-    create_github_issue,
-    send_email,
-)
+from src import store
+from src.notify import build_alert_html, build_alert_markdown, create_github_issue, send_email
 from src.scraper import fetch_properties
 
-ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = ROOT / "config.json"
-STATE_PATH = ROOT / "state" / "state.json"
 
-
-def load_config() -> dict:
-    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-
-
-def load_state() -> dict | None:
-    if not STATE_PATH.exists():
-        return None
-    try:
-        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(state, dict) or not isinstance(state.get("properties"), dict):
-        return None
-    return state
-
-
-def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def write_state(properties: dict) -> None:
-    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    body = json.dumps(
-        {"properties": properties, "updated": now_iso()},
-        indent=2,
-        ensure_ascii=False,
-        sort_keys=True,
-    )
-    STATE_PATH.write_text(body + "\n", encoding="utf-8")
-
-
-def dedupe(props: list[dict]) -> list[dict]:
-    unique: dict[str, dict] = {}
-    for prop in props:
-        prop_id = prop.get("id")
-        if prop_id and prop_id not in unique:
-            unique[prop_id] = prop
-    return list(unique.values())
-
-
-def plural(count: int) -> str:
+def _plural(count: int) -> str:
     return "property" if count == 1 else "properties"
 
 
-def as_record(prop: dict, seen_at: str) -> dict:
-    return {"name": prop.get("name"), "url": prop.get("url"), "first_seen": seen_at}
+def _as_float(value) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
-def announce(subject: str, html: str, markdown: str, config: dict) -> bool:
-    delivered = False
-    channels = (
-        ("Email", lambda: send_email(subject, html, config)),
-        ("GitHub issue", lambda: create_github_issue(subject, markdown)),
+def _filtered(props: list[dict], search: dict) -> list[dict]:
+    minimum = _as_float(search.get("min_rating"))
+    if not minimum:
+        return props
+    return [prop for prop in props if (_as_float(prop.get("rating")) or -1) >= minimum]
+
+
+def _ordered(props: list[dict]) -> list[dict]:
+    return sorted(
+        props, key=lambda prop: (-(_as_float(prop.get("rating")) or 0), prop.get("name") or "")
     )
+
+
+def _announce(subject: str, html: str, markdown: str, search: dict) -> bool:
+    channels = [("Email", lambda: send_email(subject, html, search.get("alert_email")))]
+    if os.environ.get("GITHUB_TOKEN") and os.environ.get("GITHUB_REPOSITORY"):
+        channels.append(("GitHub issue", lambda: create_github_issue(subject, markdown)))
+    delivered = False
     for name, send in channels:
         try:
             send()
             delivered = True
         except Exception as error:
-            print(f"{name} channel failed: {error}")
+            print(f"  {name} channel failed: {error}")
     return delivered
 
 
-def first_run(found: list[dict], seen_at: str, config: dict) -> bool:
-    properties = {prop["id"]: as_record(prop, seen_at) for prop in found}
-    delivered = announce(
-        f"🏨 Monitoring started: {config['search_label']}",
-        build_startup_html(len(properties), config),
-        build_startup_markdown(len(properties), config),
-        config,
+def _safe_finish(run_id, status: str, scraped: int, new: int, error=None) -> None:
+    try:
+        store.finish_run(run_id, status, scraped, new, error)
+    except Exception as finish_error:
+        print(f"  could not record run {run_id}: {finish_error}")
+
+
+def _notify(pending: list[dict], search: dict, first_run: bool) -> bool:
+    label = search.get("label") or "Booking.com search"
+    count = len(pending)
+    headline = (
+        f"{count} {_plural(count)} matching" if first_run else f"{count} new {_plural(count)}"
     )
-    write_state(properties)
-    status = "startup announcement sent" if delivered else "ALL CHANNELS FAILED"
-    print(
-        f"Scraped {len(found)} {plural(len(found))}, 0 new "
-        f"(first run, seeded state), {status}."
+    delivered = _announce(
+        f"🏨 {headline}: {label}",
+        build_alert_html(pending, search, first_run),
+        build_alert_markdown(pending, search, first_run),
+        search,
     )
+    if delivered:
+        store.mark_notified([row.get("id") for row in pending])
+    else:
+        print("  ALL CHANNELS FAILED — findings stay unnotified and retry next run.")
     return delivered
+
+
+def _run_search(search: dict) -> tuple[bool, int, int]:
+    search_id = search.get("id")
+    label = search.get("label") or search_id
+    try:
+        run_id = store.start_run(search_id)
+    except Exception as error:
+        print(f"[{label}] FAILED before starting: {error}")
+        return False, 0, 0
+    try:
+        search_url = search.get("search_url")
+        if not search_url:
+            raise RuntimeError("search row has no search_url")
+        first_run = not store.known_property_ids(search_id)
+        scraped = _filtered(fetch_properties(search_url, search.get("max_pages") or 2), search)
+        new_rows = store.insert_findings(search_id, run_id, scraped)
+        pending = _ordered(store.unnotified_findings(search_id))
+        alerted = _notify(pending, search, first_run) if pending else False
+        _safe_finish(run_id, "ok", len(scraped), len(new_rows))
+        if not pending:
+            outcome = "nothing to alert"
+        else:
+            outcome = f"{len(pending)} alerted" if alerted else f"{len(pending)} still pending"
+        print(
+            f"[{label}] {len(scraped)} scraped, {len(new_rows)} new, "
+            f"{outcome}{' (first run)' if first_run else ''}."
+        )
+        return True, len(scraped), len(new_rows)
+    except Exception as error:
+        _safe_finish(run_id, "error", 0, 0, str(error))
+        print(f"[{label}] FAILED: {error}")
+        return False, 0, 0
 
 
 def main() -> None:
-    config = load_config()
-    state = load_state()
-    found = dedupe(fetch_properties(config["search_url"], config.get("max_pages", 2)))
-    seen_at = now_iso()
-
-    if state is None:
-        if not first_run(found, seen_at, config):
-            sys.exit(1)
+    try:
+        searches = store.active_searches()
+    except Exception as error:
+        print(f"Could not load searches: {error}")
+        sys.exit(1)
+    if not searches:
+        print("No active searches.")
         return
-
-    properties = dict(state["properties"])
-    new_props = [prop for prop in found if prop["id"] not in properties]
-    delivered = True
-
-    if new_props:
-        delivered = announce(
-            f"🏨 {len(new_props)} new {plural(len(new_props))}: {config['search_label']}",
-            build_alert_html(new_props, config),
-            build_alert_markdown(new_props, config),
-            config,
-        )
-        if delivered:
-            for prop in new_props:
-                properties[prop["id"]] = as_record(prop, seen_at)
-
-    write_state(properties)
-    if not new_props:
-        status = "nothing to announce"
-    elif delivered:
-        status = "alert sent"
-    else:
-        status = "ALL CHANNELS FAILED, will retry next run"
-    print(f"Scraped {len(found)} {plural(len(found))}, {len(new_props)} new, {status}.")
-    if not delivered:
+    failed = scraped_total = new_total = 0
+    for search in searches:
+        ok, scraped, new = _run_search(search)
+        failed += 0 if ok else 1
+        scraped_total += scraped
+        new_total += new
+    print(
+        f"{len(searches)} searches: {len(searches) - failed} ok, {failed} failed, "
+        f"{scraped_total} scraped, {new_total} new."
+    )
+    if failed:
         sys.exit(1)
 
 

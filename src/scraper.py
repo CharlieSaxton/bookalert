@@ -23,8 +23,10 @@ CONSENT_SELECTORS = (
     "#onetrust-accept-btn-handler",
 )
 DISMISS_SELECTORS = ('button[aria-label^="Dismiss sign"]',)
+RATING_SELECTORS = ('[data-testid="review-score"]', '[aria-label*="Scored"]')
 # The slug may carry a locale suffix: /hotel/gb/the-savoy.en-gb.html
 HOTEL_PATH_RE = re.compile(r"/hotel/([a-z]{2})/([^/?#]+?)(?:\.[a-z]{2}(?:-[a-z]{2})?)?\.html", re.I)
+NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)?")
 
 
 def _chrome_user_agent(browser_version: str) -> str:
@@ -80,6 +82,30 @@ def _first_text(scope, selector: str) -> str | None:
     return " ".join(text.split()) or None
 
 
+def _parse_rating(text: str | None) -> float | None:
+    # "Scored 8.7 8.7 Fabulous 2,986 reviews" -> 8.7. A group of 2+ digits after the
+    # separator is a thousands separator (review count), not a score.
+    for token in NUMBER_RE.findall(text or ""):
+        whole, _, fraction = token.replace(",", ".").partition(".")
+        if len(fraction) > 1:
+            continue
+        value = float(f"{whole}.{fraction or 0}")
+        if 0 <= value <= 10:
+            return value
+    return None
+
+
+def _rating(card) -> float | None:
+    try:
+        for selector in RATING_SELECTORS:
+            rating = _parse_rating(_first_text(card, selector))
+            if rating is not None:
+                return rating
+        return _parse_rating(_first_attr(card, RATING_SELECTORS, "aria-label"))
+    except Exception:
+        return None
+
+
 def _goto(page, url: str, attempts: int = 3) -> None:
     # Booking aborts the first navigation to a search page often enough that a single
     # goto() raises ERR_ABORTED; retrying the same URL succeeds.
@@ -133,7 +159,7 @@ def _card_record(card, stay: list[tuple[str, str]]) -> dict | None:
     if not (hotel_id and url and name):
         return None
     price = _first_text(card, '[data-testid="price-and-discounted-price"]')
-    return {"id": hotel_id, "name": name, "url": url, "price": price}
+    return {"id": hotel_id, "name": name, "url": url, "price": price, "rating": _rating(card)}
 
 
 def _collect_page(page, stay: list[tuple[str, str]]) -> list[dict]:

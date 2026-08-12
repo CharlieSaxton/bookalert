@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 .DS_Store
 .claude/
+node_modules/
+.next/
+.env
+.env.local
+.vercel/
+*.tsbuildinfo

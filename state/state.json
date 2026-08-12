@@ -1,5 +1,10 @@
 {
   "properties": {
+    "gb/22-york-street-greater-london2": {
+      "first_seen": "2026-08-12T06:29:16.898387+00:00",
+      "name": "22 York Street",
+      "url": "https://www.booking.com/hotel/gb/22-york-street-greater-london2.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/55-by-le-mirage": {
       "first_seen": "2026-08-12T05:52:58.130902+00:00",
       "name": "The 55 by Le Mirage",
@@ -39,6 +44,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "St Athans Hotel",
       "url": "https://www.booking.com/hotel/gb/athans.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/barryhousehotel": {
+      "first_seen": "2026-08-12T06:29:16.898387+00:00",
+      "name": "Barry House",
+      "url": "https://www.booking.com/hotel/gb/barryhousehotel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/bronze-apartment": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -100,6 +110,16 @@
       "name": "Cromwell Hotel",
       "url": "https://www.booking.com/hotel/gb/cromwell-international-hotel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/crowne-plaza-london-ealing": {
+      "first_seen": "2026-08-12T06:29:16.898387+00:00",
+      "name": "Crowne Plaza London Ealing by IHG",
+      "url": "https://www.booking.com/hotel/gb/crowne-plaza-london-ealing.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/expressbyholidayinnroyaldocks": {
+      "first_seen": "2026-08-12T06:29:16.898387+00:00",
+      "name": "Holiday Inn Express Royal Docks by IHG",
+      "url": "https://www.booking.com/hotel/gb/expressbyholidayinnroyaldocks.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/flemings": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Flemings Mayfair - Small Luxury Hotel of the World",
@@ -134,6 +154,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Hyde Park Boutique Hotel",
       "url": "https://www.booking.com/hotel/gb/holiday-house.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/holiday-inn-express-london-excel": {
+      "first_seen": "2026-08-12T06:29:16.898387+00:00",
+      "name": "Holiday Inn Express London - ExCel by IHG",
+      "url": "https://www.booking.com/hotel/gb/holiday-inn-express-london-excel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/hotelmeridiana": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -274,6 +299,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Princes Gardens",
       "url": "https://www.booking.com/hotel/gb/princes-gardens.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/ralph-court-london1": {
+      "first_seen": "2026-08-12T06:29:16.898387+00:00",
+      "name": "Ralph Court",
+      "url": "https://www.booking.com/hotel/gb/ralph-court-london1.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/rhodes": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -441,5 +471,5 @@
       "url": "https://www.booking.com/hotel/gb/zedwell-underground-tottenham-court-rd.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     }
   },
-  "updated": "2026-08-12T05:57:54.982925+00:00"
+  "updated": "2026-08-12T06:29:17.438877+00:00"
 }

@@ -1,8 +1,10 @@
 import json
 import os
+import smtplib
 import urllib.error
 import urllib.parse
 import urllib.request
+from email.message import EmailMessage
 from html import escape
 
 RESEND_URL = "https://api.resend.com/emails"
@@ -79,12 +81,52 @@ def _post_json(url: str, headers: dict, payload: dict, label: str) -> None:
         raise RuntimeError(f"{label} request failed: {error.reason}") from error
 
 
+def _send_via_smtp(subject: str, html: str, recipients: list[str], from_email: str) -> None:
+    host = os.environ.get("SMTP_HOST", "").strip()
+    port = int(os.environ.get("SMTP_PORT", "587").strip() or 587)
+    user = os.environ.get("SMTP_USER", "").strip()
+    password = os.environ.get("SMTP_PASS", "")
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    # Gmail rewrites a From that isn't the authenticated account, so default to it.
+    message["From"] = from_email or user
+    message["To"] = ", ".join(recipients)
+    message.set_content(
+        "This alert is best viewed as HTML. Open it in a client that renders HTML email."
+    )
+    message.add_alternative(html, subtype="html")
+
+    try:
+        with smtplib.SMTP(host, port, timeout=TIMEOUT) as server:
+            server.starttls()
+            server.login(user, password)
+            server.send_message(message)
+    except smtplib.SMTPAuthenticationError as error:
+        raise RuntimeError(
+            f"SMTP login rejected for {user}: {error.smtp_code} {error.smtp_error!r}. "
+            "For Gmail this must be a 16-character App Password, not the account password."
+        ) from error
+    except (smtplib.SMTPException, OSError) as error:
+        raise RuntimeError(f"SMTP send to {', '.join(recipients)} failed: {error}") from error
+
+
 def send_email(subject: str, html: str, to_email, from_email: str = FROM_EMAIL) -> None:
-    api_key = os.environ.get("RESEND_API_KEY", "").strip()
     raw = [to_email] if isinstance(to_email, str) else list(to_email or [])
     recipients = [address.strip() for address in raw if address and address.strip()]
-    if not api_key or not recipients:
-        print(f"[DRY RUN] would send to {', '.join(recipients) or '<no recipient>'}: {subject}")
+    if not recipients:
+        print(f"[DRY RUN] would send to <no recipient>: {subject}")
+        return
+
+    # SMTP first when configured: Resend's shared sending domain refuses any recipient
+    # other than the account owner, so it cannot serve a shared alert list.
+    if os.environ.get("SMTP_HOST", "").strip():
+        _send_via_smtp(subject, html, recipients, os.environ.get("SMTP_FROM", "").strip())
+        return
+
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    if not api_key:
+        print(f"[DRY RUN] would send to {', '.join(recipients)}: {subject}")
         print(html)
         return
     _post_json(

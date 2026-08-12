@@ -18,6 +18,10 @@ export type Run = {
   started_at: string;
   finished_at: string | null;
   status: RunStatus;
+  /**
+   * Properties left AFTER the worker applies the search's min_rating — not the
+   * raw number Booking.com returned. Label it "matched", never "scanned".
+   */
   scraped_count: number | null;
   new_count: number | null;
   error: string | null;

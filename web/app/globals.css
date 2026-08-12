@@ -512,6 +512,19 @@ select {
   content: '\0021'; /* bang */
 }
 
+/* A run that was killed mid-flight: not an error the worker reported, but not
+   in progress either. */
+.badge-stale {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-color: var(--warn-border);
+}
+
+.badge-stale::before {
+  content: '\00D7'; /* multiplication sign: cut short */
+  font-size: 1em;
+}
+
 .badge-new {
   color: var(--accent);
   background: var(--accent-soft);
@@ -782,6 +795,11 @@ tbody tr:hover td {
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* Timestamps stay on one line — the table scrolls rather than stacking words. */
+.cell-when {
+  white-space: nowrap;
 }
 
 .cell-error {

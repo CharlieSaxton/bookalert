@@ -84,7 +84,7 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
               <dt>Min rating</dt>
               <dd>{search.min_rating === null ? 'Any' : formatRating(search.min_rating)}</dd>
 
-              <dt>Pages scanned</dt>
+              <dt>Pages per run</dt>
               <dd>
                 {search.max_pages} {search.max_pages === 1 ? 'page' : 'pages'} per run
               </dd>
@@ -133,6 +133,9 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
             These are new discoveries, newest first. A property is listed once — the first time it
             ever appeared in this search — so this is a log of what is new, not a snapshot of
             current results.
+            {search.min_rating === null
+              ? ''
+              : ` Properties rated below ${formatRating(search.min_rating)}, and any with no guest score yet, never reach this list.`}
           </p>
 
           {findings.length === 0 ? (
@@ -162,7 +165,11 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
                     </span>
                   </div>
                   <div className="finding-side">
-                    {finding.rating === null ? null : (
+                    {finding.rating === null ? (
+                      <span className="field-hint" title="Booking.com shows no guest score yet">
+                        No score
+                      </span>
+                    ) : (
                       <span title="Guest rating out of 10">{formatRating(finding.rating)}/10</span>
                     )}
                     {finding.price ? <span className="finding-price">{finding.price}</span> : null}
@@ -197,10 +204,10 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
                   <tr>
                     <th scope="col">Started</th>
                     <th scope="col">Status</th>
-                    <th scope="col" className="num">
-                      Scanned
+                    <th scope="col" className="num" title="Properties that met your criteria">
+                      Matched
                     </th>
-                    <th scope="col" className="num">
+                    <th scope="col" className="num" title="Of those, never seen before">
                       New
                     </th>
                     <th scope="col">Detail</th>
@@ -209,11 +216,15 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
                 <tbody>
                   {runs.map((run) => (
                     <tr key={run.id}>
-                      <td>
+                      <td className="cell-when">
                         <TimeAgo iso={run.started_at} />
                       </td>
                       <td>
-                        <RunBadge status={run.status} />
+                        <RunBadge
+                          status={run.status}
+                          startedAt={run.started_at}
+                          finishedAt={run.finished_at}
+                        />
                       </td>
                       <td className="num">{formatCount(run.scraped_count)}</td>
                       <td className="num">{formatCount(run.new_count)}</td>

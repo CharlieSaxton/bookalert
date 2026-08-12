@@ -131,13 +131,16 @@ function SearchCard({ summary }: { summary: Summary }) {
           <div className="metric-value">{formatCount(findingsCount)}</div>
           <div className="metric-label">Found</div>
         </div>
-        <div className="metric" title="New properties on the most recent run">
+        <div className="metric" title="Properties on the most recent run that had never been seen before">
           <div className="metric-value">{formatCount(lastRun?.new_count ?? null)}</div>
           <div className="metric-label">New</div>
         </div>
-        <div className="metric" title="Properties looked at on the most recent run">
+        <div
+          className="metric"
+          title="Properties on the most recent run that met your criteria, including ones already known"
+        >
           <div className="metric-value">{formatCount(lastRun?.scraped_count ?? null)}</div>
-          <div className="metric-label">Scanned</div>
+          <div className="metric-label">Matched</div>
         </div>
       </div>
 
@@ -145,7 +148,11 @@ function SearchCard({ summary }: { summary: Summary }) {
         <span className="run-line-label">Last run</span>
         {lastRun ? (
           <>
-            <RunBadge status={lastRun.status} />
+            <RunBadge
+              status={lastRun.status}
+              startedAt={lastRun.started_at}
+              finishedAt={lastRun.finished_at}
+            />
             <TimeAgo iso={lastRun.started_at} />
           </>
         ) : (

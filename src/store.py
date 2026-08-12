@@ -146,4 +146,16 @@ def mark_notified(ids) -> None:
     if not values:
         return
     joined = ",".join(f'"{value}"' for value in values)
-    _request("PATCH", f"/findings?{_query(id=f'in.({joined})')}", {"notified": True})
+    # Under the anon key RLS makes this PATCH a silent no-op rather than an error, and a
+    # silent no-op means every future run re-sends the same alert. Count the rows back.
+    updated = _request(
+        "PATCH",
+        f"/findings?{_query(id=f'in.({joined})')}",
+        {"notified": True},
+        prefer="return=representation",
+    )
+    if isinstance(updated, list) and len(updated) != len(values):
+        print(
+            f"  warning: marked {len(updated)}/{len(values)} findings notified — check that "
+            "SUPABASE_SERVICE_ROLE_KEY really is the service-role key"
+        )

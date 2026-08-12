@@ -131,6 +131,8 @@ def build_alert_markdown(new_props: list[dict], config: dict) -> str:
         price = f" — {_md(prop['price'])}" if prop.get("price") else ""
         lines.append(f"- **[{name}](<{url}>)**{price}")
     lines += ["", f"[View full search](<{config['search_url']}>)"]
+    if config.get("cc"):
+        lines += ["", f"cc {config['cc']}"]
     return "\n".join(lines)
 
 
@@ -144,4 +146,6 @@ def build_startup_markdown(count: int, config: dict) -> str:
         "",
         f"[View full search](<{config['search_url']}>)",
     ]
+    if config.get("cc"):
+        lines += ["", f"cc {config['cc']}"]
     return "\n".join(lines)

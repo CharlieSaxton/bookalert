@@ -1,5 +1,10 @@
 {
   "properties": {
+    "gb/22-york-street-greater-london2": {
+      "first_seen": "2026-08-12T06:31:54.400427+00:00",
+      "name": "22 York Street",
+      "url": "https://www.booking.com/hotel/gb/22-york-street-greater-london2.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/55-by-le-mirage": {
       "first_seen": "2026-08-12T05:52:58.130902+00:00",
       "name": "The 55 by Le Mirage",
@@ -84,6 +89,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "The Chesterfield Mayfair",
       "url": "https://www.booking.com/hotel/gb/chesterfieldhotelredcarnations.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/citadinetrafalgar": {
+      "first_seen": "2026-08-12T06:31:54.400427+00:00",
+      "name": "Citadines Trafalgar Square London",
+      "url": "https://www.booking.com/hotel/gb/citadinetrafalgar.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/club-quarters-trafalgar-square": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -249,6 +259,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Moxy London Piccadilly Circus",
       "url": "https://www.booking.com/hotel/gb/moxy-london-piccadilly-circus.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/nox-hotels-baker-street": {
+      "first_seen": "2026-08-12T06:31:54.400427+00:00",
+      "name": "146 Studios",
+      "url": "https://www.booking.com/hotel/gb/nox-hotels-baker-street.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/nox-hotels-lancaster-gate": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -420,6 +435,11 @@
       "name": "The Nayland Hotel",
       "url": "https://www.booking.com/hotel/gb/the-nayland.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/the-z-hotels-soho": {
+      "first_seen": "2026-08-12T06:31:54.400427+00:00",
+      "name": "The Z Hotel Soho",
+      "url": "https://www.booking.com/hotel/gb/the-z-hotels-soho.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/the-z-leicester-square": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "The Z Hotel Leicester Square",
@@ -439,6 +459,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Mornington Victor Hotel London Belgravia",
       "url": "https://www.booking.com/hotel/gb/victorhotel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/victory-house-london": {
+      "first_seen": "2026-08-12T06:31:54.400427+00:00",
+      "name": "Victory House Leicester Square",
+      "url": "https://www.booking.com/hotel/gb/victory-house-london.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/z-covent-garden": {
       "first_seen": "2026-08-12T05:52:58.130902+00:00",
@@ -466,5 +491,5 @@
       "url": "https://www.booking.com/hotel/gb/zedwell-underground-tottenham-court-rd.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     }
   },
-  "updated": "2026-08-12T06:29:17.438877+00:00"
+  "updated": "2026-08-12T06:31:54.958730+00:00"
 }

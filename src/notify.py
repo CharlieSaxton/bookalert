@@ -119,8 +119,10 @@ def send_email(subject: str, html: str, to_email, from_email: str = FROM_EMAIL) 
         return
 
     # SMTP first when configured: Resend's shared sending domain refuses any recipient
-    # other than the account owner, so it cannot serve a shared alert list.
-    if os.environ.get("SMTP_HOST", "").strip():
+    # other than the account owner, so it cannot serve a shared alert list. Both host and
+    # password must be present — switching on a half-configured SMTP would break the
+    # delivery that currently works rather than extend it.
+    if os.environ.get("SMTP_HOST", "").strip() and os.environ.get("SMTP_PASS", ""):
         _send_via_smtp(subject, html, recipients, os.environ.get("SMTP_FROM", "").strip())
         return
 

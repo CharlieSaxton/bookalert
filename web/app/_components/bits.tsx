@@ -30,6 +30,21 @@ export function ActiveBadge({ active }: { active: boolean }) {
   );
 }
 
+/**
+ * Marks a search that belongs to someone else. Deliberately the plain badge:
+ * this is a fact about the search, not a state anyone needs to act on.
+ */
+export function SharedBadge() {
+  return (
+    <span
+      className="badge"
+      title="Someone shared this search with you. You see everything it finds; only its owner can change or delete it."
+    >
+      Shared with you
+    </span>
+  );
+}
+
 const RUN_BADGE: Record<RunStatus, { className: string; label: string; title: string }> = {
   running: {
     className: 'badge badge-running',

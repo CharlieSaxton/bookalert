@@ -5,6 +5,12 @@ export type Search = {
   search_url: string;
   /** Every address alerted for this search. Always holds at least one entry. */
   alert_emails: string[];
+  /**
+   * Lowercased addresses with read access. Row level security matches these
+   * against the JWT email, so a viewer sees the search before they have an
+   * account only once they sign up with that address.
+   */
+  shared_with: string[];
   min_rating: number | null;
   max_pages: number;
   active: boolean;

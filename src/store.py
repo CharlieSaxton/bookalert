@@ -120,6 +120,8 @@ def requeue_returned(search_id, property_ids, run_id, props_by_id) -> list[dict]
                 "run_id": run_id,
                 "price": prop.get("price"),
                 "rating": prop.get("rating"),
+                "image_url": prop.get("image_url"),
+                "room_type": prop.get("room_type"),
                 "available": True,
                 "last_seen": _now_iso(),
             },
@@ -182,6 +184,8 @@ def insert_findings(search_id, run_id, props: list[dict]) -> list[dict]:
                 "url": prop.get("url"),
                 "price": prop.get("price"),
                 "rating": prop.get("rating"),
+                "image_url": prop.get("image_url"),
+                "room_type": prop.get("room_type"),
             }
         )
     if not rows:

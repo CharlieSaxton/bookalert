@@ -5,7 +5,8 @@ import { formatAbsolute, formatCount, formatRating } from '@/lib/format';
 import type { Finding, Run, Search } from '@/lib/types';
 import { SearchActions } from '@/app/_components/search-actions';
 import { RecipientsEditor } from '@/app/_components/recipients-editor';
-import { ActiveBadge, RunBadge, TimeAgo } from '@/app/_components/bits';
+import { ShareEditor } from '@/app/_components/share-editor';
+import { ActiveBadge, RecipientList, RunBadge, SharedBadge, TimeAgo } from '@/app/_components/bits';
 import { Topbar } from '@/app/_components/topbar';
 
 const FINDINGS_LIMIT = 300;
@@ -52,6 +53,10 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
   const runs = (runsResult.data ?? []) as Run[];
   const total = findingsCount.count ?? findings.length;
   const recipients = search.alert_emails ?? [];
+  // Row level security lets a shared viewer read all of this; only the owner may
+  // write it, so every editing control below hangs off this one check.
+  const isOwner = search.user_id === user.id;
+  const viewers = search.shared_with ?? [];
 
   return (
     <div className="shell">
@@ -73,10 +78,14 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
           >
             <h1 className="page-title">{search.label}</h1>
             <ActiveBadge active={search.active} />
+            {isOwner ? null : <SharedBadge />}
           </div>
           <p className="page-lede">
             Added {formatAbsolute(search.created_at)}. Alerts go to {formatCount(recipients.length)}{' '}
             {recipients.length === 1 ? 'recipient' : 'recipients'}.
+            {isOwner
+              ? ''
+              : ' This search belongs to someone else — you can follow everything it finds, but only its owner can change or delete it.'}
           </p>
         </div>
 
@@ -100,12 +109,43 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
 
             <div className="stack" style={{ gap: 'var(--s2)' }}>
               <span className="section-label">Alert recipients</span>
-              <p className="field-hint">
-                Everyone listed gets the same email when this search turns up a property it has
-                never seen. Changes save as you make them.
-              </p>
-              <RecipientsEditor searchId={search.id} emails={recipients} />
+              {isOwner ? (
+                <>
+                  <p className="field-hint">
+                    Everyone listed gets the same email when this search turns up a property it has
+                    never seen. Changes save as you make them.
+                  </p>
+                  <RecipientsEditor searchId={search.id} emails={recipients} />
+                </>
+              ) : (
+                <>
+                  <p className="field-hint">
+                    Everyone listed gets the same email when this search turns up a property it has
+                    never seen. Only its owner can change who that is.
+                  </p>
+                  <RecipientList emails={recipients} />
+                </>
+              )}
             </div>
+
+            {isOwner ? (
+              <>
+                <hr className="divider" />
+
+                <div className="stack" style={{ gap: 'var(--s2)' }}>
+                  <span className="section-label">Shared with</span>
+                  <p className="field-hint">
+                    They can view this search and its findings. Only you can edit it. If they do not
+                    have an account yet, access starts when they sign up with this address.
+                  </p>
+                  <ShareEditor
+                    searchId={search.id}
+                    ownerEmail={user.email ?? ''}
+                    viewers={viewers}
+                  />
+                </div>
+              </>
+            ) : null}
 
             <hr className="divider" />
 
@@ -121,14 +161,18 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
               </a>
             </div>
 
-            <hr className="divider" />
+            {isOwner ? (
+              <>
+                <hr className="divider" />
 
-            <SearchActions
-              id={search.id}
-              label={search.label}
-              active={search.active}
-              redirectTo="/"
-            />
+                <SearchActions
+                  id={search.id}
+                  label={search.label}
+                  active={search.active}
+                  redirectTo="/"
+                />
+              </>
+            ) : null}
           </div>
         </section>
 

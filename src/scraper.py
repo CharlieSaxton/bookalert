@@ -24,6 +24,13 @@ CONSENT_SELECTORS = (
 )
 DISMISS_SELECTORS = ('button[aria-label^="Dismiss sign"]',)
 RATING_SELECTORS = ('[data-testid="review-score"]', '[aria-label*="Scored"]')
+IMAGE_SELECTORS = ('[data-testid="image"]', "img[src*='bstatic.com']", "img")
+ROOM_SELECTORS = (
+    '[data-testid="recommended-units"] h4',
+    '[data-testid="recommended-units"] [role="link"]',
+    '[data-testid="recommended-units"] span',
+    '[data-testid="recommended-units"]',
+)
 # The slug may carry a locale suffix: /hotel/gb/the-savoy.en-gb.html
 HOTEL_PATH_RE = re.compile(r"/hotel/([a-z]{2})/([^/?#]+?)(?:\.[a-z]{2}(?:-[a-z]{2})?)?\.html", re.I)
 NUMBER_RE = re.compile(r"\d+(?:[.,]\d+)?")
@@ -106,6 +113,34 @@ def _rating(card) -> float | None:
         return None
 
 
+def _image(card) -> str | None:
+    try:
+        src = _first_attr(card, IMAGE_SELECTORS, "src")
+        if not src or src.startswith("data:"):
+            return None
+        # Cards ship a thumbnail (square60/square200); ask for a size that survives a
+        # retina display in an email client without bloating the message.
+        return re.sub(r"/square\d+/|/max\d+x\d+/", "/max500/", src)
+    except Exception:
+        return None
+
+
+def _room_type(card) -> str | None:
+    try:
+        for selector in ROOM_SELECTORS:
+            text = _first_text(card, selector)
+            if not text:
+                continue
+            line = text.split("\n")[0].strip()
+            # The container selector is a last resort and drags in bed counts and
+            # cancellation blurb, so keep only a plausible room name.
+            if 3 < len(line) <= 90 and not line.lower().startswith(("free cancel", "breakfast")):
+                return line
+        return None
+    except Exception:
+        return None
+
+
 def _goto(page, url: str, attempts: int = 3) -> None:
     # Booking aborts the first navigation to a search page often enough that a single
     # goto() raises ERR_ABORTED; retrying the same URL succeeds.
@@ -159,7 +194,15 @@ def _card_record(card, stay: list[tuple[str, str]]) -> dict | None:
     if not (hotel_id and url and name):
         return None
     price = _first_text(card, '[data-testid="price-and-discounted-price"]')
-    return {"id": hotel_id, "name": name, "url": url, "price": price, "rating": _rating(card)}
+    return {
+        "id": hotel_id,
+        "name": name,
+        "url": url,
+        "price": price,
+        "rating": _rating(card),
+        "image_url": _image(card),
+        "room_type": _room_type(card),
+    }
 
 
 def _collect_page(page, stay: list[tuple[str, str]]) -> list[dict]:
@@ -200,9 +243,16 @@ def fetch_properties(search_url: str, max_pages: int = 2) -> list[dict]:
                 _goto(page, _page_url(search_url, index * RESULTS_PER_PAGE))
                 _dismiss_overlays(page)
                 records = _collect_page(page, stay)
+                if not records:
+                    break
+                before = len(found)
                 for record in records:
                     found.setdefault(record["id"], record)
-                if len(records) < RESULTS_PER_PAGE:
+                # Booking lazy-loads well past the nominal 25 per page, so consecutive
+                # offsets overlap heavily. Stopping when an offset contributes nothing
+                # new is what actually marks the end of the result set; counting rows
+                # would keep paging through duplicates to the max_pages ceiling.
+                if len(found) == before:
                     break
         finally:
             context.close()

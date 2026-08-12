@@ -6,6 +6,7 @@ import { createClient, getSessionUser } from '@/lib/supabase/server';
 import type { CreateSearchState, MutationState } from '@/lib/form-state';
 import {
   LAST_RECIPIENT_ERROR,
+  SHARING_WITH_YOURSELF,
   containsEmail,
   isValidEmail,
   normaliseEmail,
@@ -15,6 +16,13 @@ const BOOKING_PREFIX = 'https://www.booking.com/';
 
 /** A row the update did not match: deleted, or owned by another account. */
 const NO_SUCH_SEARCH = 'That search is no longer available on this account. Reload the page.';
+
+/**
+ * Shown when someone a search was shared with tries to change it. They can read
+ * the row, so the write is not blocked by a missing row but by ownership — say
+ * that rather than letting row level security answer with silence.
+ */
+const NOT_THE_OWNER = 'Only the person who created this search can change who it is shared with.';
 
 export async function createSearch(
   _previous: CreateSearchState,
@@ -172,6 +180,44 @@ export async function removeRecipient(searchId: string, email: string): Promise<
   return writeRecipients(supabase, searchId, remaining);
 }
 
+export async function shareSearch(searchId: string, email: string): Promise<MutationState> {
+  if (!searchId) return { error: 'Missing search id.' };
+
+  const address = normaliseEmail(email);
+  if (!isValidEmail(address)) return { error: `"${email.trim()}" is not a valid email address.` };
+
+  const supabase = await createClient();
+  const current = await readSharing(supabase, searchId);
+  if ('error' in current) return current;
+
+  if (normaliseEmail(current.ownerEmail) === address) {
+    return { error: SHARING_WITH_YOURSELF };
+  }
+  if (containsEmail(current.viewers, address)) {
+    return { error: `${address} can already see this search.` };
+  }
+
+  return writeSharing(supabase, searchId, [...current.viewers, address]);
+}
+
+export async function unshareSearch(searchId: string, email: string): Promise<MutationState> {
+  if (!searchId) return { error: 'Missing search id.' };
+
+  const address = normaliseEmail(email);
+  if (!isValidEmail(address)) return { error: `"${email.trim()}" is not a valid email address.` };
+
+  const supabase = await createClient();
+  const current = await readSharing(supabase, searchId);
+  if ('error' in current) return current;
+
+  if (!containsEmail(current.viewers, address)) {
+    return { error: `${address} does not have access to this search.` };
+  }
+
+  const remaining = current.viewers.filter((entry) => normaliseEmail(entry) !== address);
+  return writeSharing(supabase, searchId, remaining);
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
@@ -200,11 +246,7 @@ async function readRecipients(
   if (error) return { error: describeDbError(error.message) };
   if (!data) return { error: NO_SUCH_SEARCH };
 
-  const raw: unknown = data.alert_emails;
-  const emails = Array.isArray(raw)
-    ? raw.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '')
-    : [];
-  return { emails };
+  return { emails: stringList(data.alert_emails) };
 }
 
 async function writeRecipients(
@@ -226,6 +268,58 @@ async function writeRecipients(
   revalidatePath('/');
   revalidatePath(`/searches/${searchId}`);
   return {};
+}
+
+/**
+ * The viewer list plus the address of whoever is asking. Unlike the recipient
+ * list this row is readable by the people it is shared with, so ownership is
+ * checked here: without it the update would match nothing and the person would
+ * be told the search had vanished, which is both wrong and alarming.
+ */
+async function readSharing(
+  supabase: Db,
+  searchId: string,
+): Promise<{ viewers: string[]; ownerEmail: string } | { error: string }> {
+  const user = await getSessionUser();
+  if (!user) return { error: 'Your session has expired. Sign in again.' };
+
+  const { data, error } = await supabase
+    .from('searches')
+    .select('user_id, shared_with')
+    .eq('id', searchId)
+    .maybeSingle();
+
+  if (error) return { error: describeDbError(error.message) };
+  if (!data) return { error: NO_SUCH_SEARCH };
+  if (data.user_id !== user.id) return { error: NOT_THE_OWNER };
+
+  return { viewers: stringList(data.shared_with), ownerEmail: user.email ?? '' };
+}
+
+async function writeSharing(
+  supabase: Db,
+  searchId: string,
+  viewers: string[],
+): Promise<MutationState> {
+  const { data, error } = await supabase
+    .from('searches')
+    .update({ shared_with: viewers })
+    .eq('id', searchId)
+    .select('id');
+
+  if (error) return { error: describeDbError(error.message) };
+  if (!data || data.length === 0) return { error: NO_SUCH_SEARCH };
+
+  revalidatePath('/');
+  revalidatePath(`/searches/${searchId}`);
+  return {};
+}
+
+/** A text[] column as it arrives from PostgREST, with blanks dropped. */
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is string => typeof entry === 'string' && entry.trim() !== '')
+    : [];
 }
 
 function text(formData: FormData, key: string): string {

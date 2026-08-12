@@ -1,8 +1,8 @@
 /**
- * Recipient list rules, shared by the Server Actions and the forms that call
- * them so an address the browser accepts is never rejected by the server, or
- * the reverse. Kept out of the `'use server'` module, which may only export
- * async functions.
+ * Rules for the two email lists a search carries — who gets alerted and who may
+ * view it — shared by the Server Actions and the forms that call them so an
+ * address the browser accepts is never rejected by the server, or the reverse.
+ * Kept out of the `'use server'` module, which may only export async functions.
  */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -14,6 +14,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
  */
 export const LAST_RECIPIENT_ERROR =
   'A search needs at least one recipient — with none it would keep running and alert nobody. Add another address first.';
+
+/**
+ * Shown when the owner tries to share a search with their own address. It would
+ * grant nothing they do not already have, and it would then sit in the list
+ * looking like a second person.
+ */
+export const SHARING_WITH_YOURSELF =
+  'That is your own address — you already have full access to this search.';
 
 /** Trimmed and lowercased: the exact form that gets stored. */
 export function normaliseEmail(value: string): string {

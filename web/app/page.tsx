@@ -5,13 +5,15 @@ import { formatCount, formatRating } from '@/lib/format';
 import type { Run, Search } from '@/lib/types';
 import { AddSearchForm } from '@/app/_components/add-search-form';
 import { SearchActions } from '@/app/_components/search-actions';
-import { ActiveBadge, RecipientList, RunBadge, TimeAgo } from '@/app/_components/bits';
+import { ActiveBadge, RecipientList, RunBadge, SharedBadge, TimeAgo } from '@/app/_components/bits';
 import { Topbar } from '@/app/_components/topbar';
 
 type Summary = {
   search: Search;
   lastRun: Run | null;
   findingsCount: number;
+  /** False for a search someone else shared with this account. */
+  isOwner: boolean;
 };
 
 export default async function DashboardPage() {
@@ -28,8 +30,9 @@ export default async function DashboardPage() {
 
   const searches = (data ?? []) as Search[];
 
-  // Row level security already scopes these to the signed-in user. Counting with
-  // head:true keeps totals exact without pulling every finding down the wire.
+  // Row level security returns this account's own searches and any shared with
+  // it, so the split below is what separates them. Counting with head:true keeps
+  // totals exact without pulling every finding down the wire.
   const summaries: Summary[] = await Promise.all(
     searches.map(async (search) => {
       const [run, findings] = await Promise.all([
@@ -50,11 +53,14 @@ export default async function DashboardPage() {
         search,
         lastRun: (run.data as Run | null) ?? null,
         findingsCount: findings.count ?? 0,
+        isOwner: search.user_id === user.id,
       };
     }),
   );
 
-  const activeCount = searches.filter((search) => search.active).length;
+  const owned = summaries.filter((summary) => summary.isOwner);
+  const shared = summaries.filter((summary) => !summary.isOwner);
+  const activeCount = owned.filter((summary) => summary.search.active).length;
 
   return (
     <div className="shell">
@@ -91,31 +97,58 @@ export default async function DashboardPage() {
         <section className="section">
           <div className="section-head">
             <h2 className="section-label">Watching</h2>
-            {searches.length > 0 ? (
+            {owned.length > 0 ? (
               <p className="count-hint">
-                {formatCount(searches.length)} {searches.length === 1 ? 'search' : 'searches'} ·{' '}
+                {formatCount(owned.length)} {owned.length === 1 ? 'search' : 'searches'} ·{' '}
                 {formatCount(activeCount)} active
               </p>
             ) : null}
           </div>
 
-          {searches.length === 0 ? (
-            <EmptyState />
+          {owned.length === 0 ? (
+            // With something shared in, the full onboarding empty state would
+            // read as "you have nothing", which is not true — so it shrinks to
+            // a note and the shared section below carries the page.
+            shared.length > 0 ? (
+              <NoSearchesOfYourOwn />
+            ) : (
+              <EmptyState />
+            )
           ) : (
             <div className="card-grid">
-              {summaries.map((summary) => (
+              {owned.map((summary) => (
                 <SearchCard key={summary.search.id} summary={summary} />
               ))}
             </div>
           )}
         </section>
+
+        {shared.length > 0 ? (
+          <section className="section">
+            <div className="section-head">
+              <h2 className="section-label">Shared with you</h2>
+              <p className="count-hint">
+                {formatCount(shared.length)} {shared.length === 1 ? 'search' : 'searches'}
+              </p>
+            </div>
+            <p className="page-lede" style={{ fontSize: '0.8125rem' }}>
+              Searches other people run and shared with {email}. You see everything they find; only
+              their owners can change them.
+            </p>
+            <div className="card-grid">
+              {shared.map((summary) => (
+                <SearchCard key={summary.search.id} summary={summary} />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
     </div>
   );
 }
 
 function SearchCard({ summary }: { summary: Summary }) {
-  const { search, lastRun, findingsCount } = summary;
+  const { search, lastRun, findingsCount, isOwner } = summary;
 
   return (
     <article className="card">
@@ -123,7 +156,18 @@ function SearchCard({ summary }: { summary: Summary }) {
         <h3 className="card-title">
           <Link href={`/searches/${search.id}`}>{search.label}</Link>
         </h3>
-        <ActiveBadge active={search.active} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--s2)',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <ActiveBadge active={search.active} />
+          {isOwner ? null : <SharedBadge />}
+        </div>
       </div>
 
       <div className="metrics">
@@ -183,9 +227,24 @@ function SearchCard({ summary }: { summary: Summary }) {
         <Link href={`/searches/${search.id}`} className="btn">
           Open
         </Link>
-        <SearchActions id={search.id} label={search.label} active={search.active} />
+        {isOwner ? (
+          <SearchActions id={search.id} label={search.label} active={search.active} />
+        ) : null}
       </div>
     </article>
+  );
+}
+
+function NoSearchesOfYourOwn() {
+  return (
+    <div className="empty">
+      <h3 className="empty-title">None of your own yet</h3>
+      <p className="empty-body">
+        You have not added a search yourself. Paste a Booking.com results page into the form above
+        and it starts watching on the next scheduled run. The searches below were shared with you by
+        other people.
+      </p>
+    </div>
   );
 }
 

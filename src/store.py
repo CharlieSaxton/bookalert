@@ -115,6 +115,11 @@ def insert_findings(search_id, run_id, props: list[dict]) -> list[dict]:
         property_id = prop.get("id")
         if not property_id or property_id in seen:
             continue
+        # findings.name and findings.url are NOT NULL and this insert is all-or-nothing,
+        # so one malformed card would otherwise discard the whole batch.
+        if not (prop.get("name") and prop.get("url")):
+            print(f"  skipping {property_id}: missing name or url")
+            continue
         seen.add(property_id)
         rows.append(
             {

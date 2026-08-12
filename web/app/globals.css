@@ -802,10 +802,16 @@ tbody tr:hover td {
   white-space: nowrap;
 }
 
+/* Worker errors run to 2000 chars. Clamp so one bad run cannot make a row
+   hundreds of pixels tall; the full text stays available on hover. */
 .cell-error {
   color: var(--danger);
   max-width: 24rem;
   overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* ===== findings =========================================================== */

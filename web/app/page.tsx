@@ -172,7 +172,7 @@ function SearchCard({ summary }: { summary: Summary }) {
       </dl>
 
       {lastRun?.status === 'error' && lastRun.error ? (
-        <p className="notice notice-error">
+        <p className="notice notice-error" title={lastRun.error}>
           <span>{truncate(lastRun.error, 220)}</span>
         </p>
       ) : null}

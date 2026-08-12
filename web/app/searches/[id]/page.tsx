@@ -228,7 +228,10 @@ export default async function SearchDetailPage({ params }: { params: Promise<{ i
                       </td>
                       <td className="num">{formatCount(run.scraped_count)}</td>
                       <td className="num">{formatCount(run.new_count)}</td>
-                      <td className={run.error ? 'cell-error' : ''}>
+                      <td
+                        className={run.error ? 'cell-error' : ''}
+                        title={run.error ?? undefined}
+                      >
                         {run.error ? run.error : <span className="field-hint">—</span>}
                       </td>
                     </tr>

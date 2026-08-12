@@ -1,5 +1,15 @@
 {
   "properties": {
+    "gb/22-york-street-greater-london2": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "22 York Street",
+      "url": "https://www.booking.com/hotel/gb/22-york-street-greater-london2.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/55-by-le-mirage": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "The 55 by Le Mirage",
+      "url": "https://www.booking.com/hotel/gb/55-by-le-mirage.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/69thegrove-london": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "69TheGrove",
@@ -10,6 +20,11 @@
       "name": "The W14 Kensington",
       "url": "https://www.booking.com/hotel/gb/ace.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/adria-hotel": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Adria Hotel",
+      "url": "https://www.booking.com/hotel/gb/adria-hotel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/airways-victoria": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "The 29 London",
@@ -19,6 +34,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Arriva Hotel",
       "url": "https://www.booking.com/hotel/gb/arriva.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/assembly": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Assembly Leicester Square",
+      "url": "https://www.booking.com/hotel/gb/assembly.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/athans": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -45,6 +65,11 @@
       "name": "Central Park Hotel",
       "url": "https://www.booking.com/hotel/gb/centralparklondon.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/charlotte-guest-house": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Charlotte Guest House",
+      "url": "https://www.booking.com/hotel/gb/charlotte-guest-house.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/chelseaguesthouse": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Chelsea Guest House",
@@ -65,6 +90,11 @@
       "name": "Club Quarters Hotel Trafalgar Square, London",
       "url": "https://www.booking.com/hotel/gb/club-quarters-trafalgar-square.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/comfort-inn-hyde-park-london": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Comfort Inn Hyde Park",
+      "url": "https://www.booking.com/hotel/gb/comfort-inn-hyde-park-london.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/cosy-rooms-next-to-st-pancras-station": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Cosy Rooms next to St Pancras Station",
@@ -79,6 +109,11 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Flemings Mayfair - Small Luxury Hotel of the World",
       "url": "https://www.booking.com/hotel/gb/flemings.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/fulham-central-london-luxury-studios-close-to-underground-newly-refurbished-3": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Boutique Studios by Luxestays Fulham Broadway",
+      "url": "https://www.booking.com/hotel/gb/fulham-central-london-luxury-studios-close-to-underground-newly-refurbished-3.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/gem-strathmore": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -120,10 +155,20 @@
       "name": "MSK The Whiteley",
       "url": "https://www.booking.com/hotel/gb/hyde-park-whiteleaf.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/imperial-york-street-apartments": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Imperial York Street Apartments",
+      "url": "https://www.booking.com/hotel/gb/imperial-york-street-apartments.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/inverness-terrace-serviced-apartments": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Inverness Terrace Serviced Apartments",
       "url": "https://www.booking.com/hotel/gb/inverness-terrace-serviced-apartments.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/kip": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Kip Hotel",
+      "url": "https://www.booking.com/hotel/gb/kip.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/la-gaffe": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -160,10 +205,20 @@
       "name": "LSE Passfield Hall",
       "url": "https://www.booking.com/hotel/gb/lse-passfield-hall.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/mason-amp-fifth-belsize-park-greater-london": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Mason & Fifth, Belsize Park",
+      "url": "https://www.booking.com/hotel/gb/mason-amp-fifth-belsize-park-greater-london.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/mentone": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Mentone Hotel",
       "url": "https://www.booking.com/hotel/gb/mentone.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/merlyn-court-greater-london1": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "The Barkston",
+      "url": "https://www.booking.com/hotel/gb/merlyn-court-greater-london1.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/mimi-39-s-soho": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -205,6 +260,11 @@
       "name": "Pembridge Palace Hotel",
       "url": "https://www.booking.com/hotel/gb/pembridge-palace.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/portobello-notting-hill-london-double-room": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "RB Portobello",
+      "url": "https://www.booking.com/hotel/gb/portobello-notting-hill-london-double-room.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/president": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "President Hotel",
@@ -219,6 +279,16 @@
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "Rhodes Hotel",
       "url": "https://www.booking.com/hotel/gb/rhodes.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/royal-national": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Royal National Hotel",
+      "url": "https://www.booking.com/hotel/gb/royal-national.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
+    "gb/royalcambridgehotel": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "Royal Cambridge Hotel",
+      "url": "https://www.booking.com/hotel/gb/royalcambridgehotel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
     "gb/royalhorseguards": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
@@ -345,6 +415,11 @@
       "name": "Mornington Victor Hotel London Belgravia",
       "url": "https://www.booking.com/hotel/gb/victorhotel.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     },
+    "gb/z-covent-garden": {
+      "first_seen": "2026-08-12T05:52:58.130902+00:00",
+      "name": "The Z Hotel Covent Garden",
+      "url": "https://www.booking.com/hotel/gb/z-covent-garden.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
+    },
     "gb/z-trafalgar": {
       "first_seen": "2026-08-12T05:50:23.461541+00:00",
       "name": "The Z Hotel Trafalgar",
@@ -366,5 +441,5 @@
       "url": "https://www.booking.com/hotel/gb/zedwell-underground-tottenham-court-rd.en-gb.html?checkin=2026-09-15&checkout=2026-09-17&group_adults=2&no_rooms=1&group_children=0"
     }
   },
-  "updated": "2026-08-12T05:50:23.913364+00:00"
+  "updated": "2026-08-12T05:52:58.508343+00:00"
 }
